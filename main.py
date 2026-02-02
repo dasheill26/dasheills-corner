@@ -8,14 +8,12 @@ from firestore_repo import get_menu_items
 
 APP_NAME = "DASHEILLS CORNER"
 
-# ---------------- Simple i18n (no extra packages) ----------------
 SUPPORTED_LANGS = {
     "en": "English",
     "es": "Español",
     "fr": "Français",
 }
 
-# Translation dictionary (start small; expand anytime)
 TRANSLATIONS = {
     "en": {
         "Language": "Language",
@@ -144,7 +142,6 @@ def create_app():
     def t(key: str, **kwargs) -> str:
         lang = get_lang()
         text = TRANSLATIONS.get(lang, {}).get(key, TRANSLATIONS["en"].get(key, key))
-        # allow %(name)s formatting used in your templates
         if kwargs:
             try:
                 return text % kwargs
@@ -163,7 +160,7 @@ def create_app():
             "lang": get_lang(),
             "languages": SUPPORTED_LANGS,
             "t": t,
-            "_": t,  # IMPORTANT: allows {{ _("...") }} in templates
+            "_": t,
         }
 
     # ---------------- Language switch ----------------
@@ -220,6 +217,32 @@ def create_app():
             coupons=[]
         )
 
+    # ---------------- REST API ----------------
+    @app.get("/api/menu")
+    def api_menu():
+        """
+        Used by unit tests + can be used by frontend JS if needed.
+        Always returns JSON list.
+        In environments without Firestore credentials (pytest/local),
+        get_menu_items() safely returns [].
+        """
+        items = get_menu_items(include_unavailable=True)
+        # Ensure each item has the keys the frontend expects
+        normalized = []
+        for it in items:
+            normalized.append({
+                "id": it.get("id") or it.get("itemId"),
+                "itemId": it.get("itemId") or it.get("id"),
+                "name": it.get("name", ""),
+                "description": it.get("description", ""),
+                "pricePence": int(it.get("pricePence", 0) or 0),
+                "category": it.get("category", "Other"),
+                "image": it.get("image", ""),
+                "sortOrder": int(it.get("sortOrder", 9999) or 9999),
+                "isAvailable": bool(it.get("isAvailable", True)),
+            })
+        return jsonify(normalized), 200
+
     # ---------------- Demo Payment (2-step) ----------------
     @app.post("/pay/stripe")
     @login_required
@@ -228,7 +251,6 @@ def create_app():
             flash("Your cart is empty.", "error")
             return redirect(url_for("menu"))
 
-        # NEW: order type
         order_type = request.form.get("order_type", "delivery").strip().lower()
         collection_time = request.form.get("collection_time", "ASAP").strip()
         booking_time = request.form.get("booking_time", "").strip()
@@ -249,7 +271,6 @@ def create_app():
             flash("Booking time is required.", "error")
             return redirect(url_for("checkout"))
 
-        # keep existing demo coupon/points fields (safe even if not used yet)
         coupon_code = request.form.get("coupon_code", "").strip().upper()
         redeem_points = (request.form.get("redeem_points") == "on")
 
@@ -312,20 +333,6 @@ def create_app():
         pending = session.get("pending_payment") or {}
 
         order = Order(user_id=u.id, total_pence=total)
-
-        # SAFE optional fields (won't break if columns don't exist)
-        if hasattr(order, "order_type"):
-            order.order_type = pending.get("order_type")
-        if hasattr(order, "delivery_address"):
-            order.delivery_address = pending.get("delivery_address")
-        if hasattr(order, "customer_name"):
-            order.customer_name = pending.get("customer_name")
-        if hasattr(order, "collection_time"):
-            order.collection_time = pending.get("collection_time")
-        if hasattr(order, "booking_time"):
-            order.booking_time = pending.get("booking_time")
-        if hasattr(order, "table_number"):
-            order.table_number = pending.get("table_number")
 
         db.session.add(order)
         db.session.commit()
