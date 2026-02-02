@@ -6,3 +6,23 @@ app.yaml
 .github/workflows/
 instance/*.db
 test_results.txt
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Virtual environment
+.venv/
+venv/
+
+# Instance / local DB
+instance/
+*.db
+
+# Environment variables
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+.vscode/
