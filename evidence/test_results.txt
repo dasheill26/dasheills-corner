@@ -1,0 +1,20 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-8.3.2, pluggy-1.6.0 -- /home/dasheillknicxvas/dasheills-corner/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/dasheillknicxvas/dasheills-corner
+configfile: pytest.ini
+testpaths: tests
+collecting ... collected 10 items
+
+tests/test_api.py::test_menu_api PASSED                                  [ 10%]
+tests/test_auth.py::test_register_and_login PASSED                       [ 20%]
+tests/test_auth.py::test_login_rejects_wrong_password PASSED             [ 30%]
+tests/test_cart_api.py::test_cart_add_and_setqty PASSED                  [ 40%]
+tests/test_i18n.py::test_language_switch_sets_session PASSED             [ 50%]
+tests/test_orders.py::test_orders_requires_login PASSED                  [ 60%]
+tests/test_orders.py::test_place_order_creates_order PASSED              [ 70%]
+tests/test_rewards.py::test_rewards_points_increase_after_order PASSED   [ 80%]
+tests/test_security.py::test_checkout_requires_login PASSED              [ 90%]
+tests/test_security.py::test_cannot_register_duplicate_email PASSED      [100%]
+
+============================== 10 passed in 2.72s ==============================

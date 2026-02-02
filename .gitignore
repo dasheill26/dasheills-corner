@@ -1,28 +1,17 @@
-.venv/
-__pycache__/
-*.pyc
-.env
-app.yaml
-.github/workflows/
-instance/*.db
-test_results.txt
 # Python
 __pycache__/
 *.pyc
 .pytest_cache/
+.mypy_cache/
 
-# Virtual environment
+# Virtual env
 .venv/
 venv/
 
-# Instance / local DB
+# Local DB / instance
 instance/
 *.db
 
-# Environment variables
-.env
-.env.*
-
-# OS / editor
+# OS/editor
 .DS_Store
 .vscode/
