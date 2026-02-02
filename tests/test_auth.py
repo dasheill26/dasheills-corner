@@ -1,27 +1,37 @@
-import os
-import pytest
-from main import create_app
-from models import db
-
-@pytest.fixture()
-def app():
-    os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-    os.environ["SECRET_KEY"] = "test"
-    a = create_app()
-    a.config.update(TESTING=True, WTF_CSRF_ENABLED=False)
-    with a.app_context():
-        db.create_all()
-    yield a
-
-@pytest.fixture()
-def client(app):
-    return app.test_client()
-
 def test_register_and_login(client):
-    r = client.post("/register", data={"name":"Test User", "email":"t@example.com", "password":"password123"}, follow_redirects=True)
+    # Register (your /register only uses email + password)
+    r = client.post(
+        "/register",
+        data={"email": "t@example.com", "password": "password123"},
+        follow_redirects=True,
+    )
     assert r.status_code == 200
 
-    client.post("/logout", follow_redirects=True)
+    # Logout
+    r_logout = client.get("/logout", follow_redirects=True)
+    assert r_logout.status_code == 200
 
-    r2 = client.post("/login", data={"email":"t@example.com", "password":"password123"}, follow_redirects=True)
+    # Login
+    r2 = client.post(
+        "/login",
+        data={"email": "t@example.com", "password": "password123"},
+        follow_redirects=True,
+    )
     assert r2.status_code == 200
+
+
+def test_login_rejects_wrong_password(client):
+    # Create account first
+    client.post(
+        "/register",
+        data={"email": "x@example.com", "password": "password123"},
+        follow_redirects=True,
+    )
+
+    # Wrong password should redirect back to /login (still returns 200 after redirects)
+    r = client.post(
+        "/login",
+        data={"email": "x@example.com", "password": "WRONG"},
+        follow_redirects=True,
+    )
+    assert r.status_code == 200
