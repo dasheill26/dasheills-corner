@@ -84,3 +84,19 @@ This project includes automated unit and integration tests written using **pytes
 ```bash
 source .venv/bin/activate
 pytest -v
+
+## Deployment readiness
+
+This application is designed for cloud deployment.
+
+Features supporting deployment:
+- Health check endpoint: `/healthz`
+- Environment-based configuration via `.env`
+- Firestore access fails safely when credentials are missing
+- Stateless session handling
+- Automated tests with pytest
+
+To deploy:
+1. Set environment variables (see `.env.example`)
+2. Run database migrations (if required)
+3. Start the app using a WSGI server (e.g. gunicorn)
