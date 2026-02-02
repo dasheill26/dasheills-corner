@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="page-title">Admin • Menu Manager</h2>
+<p class="muted">Edit Firestore menu items (NoSQL). Changes show instantly on the customer menu.</p>
+
+{% set order = ["Mains", "Sides", "Drinks", "Other"] %}
+
+{% for cat in order %}
+  {% set items = categories.get(cat, []) %}
+  {% if items and items|length > 0 %}
+    <h3 class="category">{{ cat }}</h3>
+
+    <div class="admin-grid">
+      {% for it in items %}
+        <div class="panel admin-card">
+          <div class="admin-top">
+            <div class="strong">{{ it.name }}</div>
+            {% if it.isAvailable %}
+              <span class="badge badge-pop">Available</span>
+            {% else %}
+              <span class="badge badge-spicy">Hidden</span>
+            {% endif %}
+          </div>
+
+          <div class="muted small">Doc ID: {{ it.id }}</div>
+
+          <form method="POST" action="{{ url_for('admin_menu_update', doc_id=it.id) }}" class="admin-form">
+            <label class="label">Name</label>
+            <input class="input" name="name" value="{{ it.name }}">
+
+            <label class="label">Description</label>
+            <input class="input" name="description" value="{{ it.description }}">
+
+            <div class="admin-row">
+              <div>
+                <label class="label">Category</label>
+                <select class="select" name="category">
+                  {% for c in ["Mains","Sides","Drinks","Other"] %}
+                    <option value="{{ c }}" {% if it.category == c %}selected{% endif %}>{{ c }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div>
+                <label class="label">Sort order</label>
+                <input class="input" name="sortOrder" value="{{ it.sortOrder }}">
+              </div>
+            </div>
+
+            <div class="admin-row">
+              <div>
+                <label class="label">Price (pence)</label>
+                <input class="input" name="pricePence" value="{{ it.pricePence }}">
+                <div class="muted small">£{{ "%.2f"|format(it.pricePence/100) }}</div>
+              </div>
+              <div>
+                <label class="label">Image path</label>
+                <input class="input" name="image" value="{{ it.image }}">
+                <div class="muted small">Example: /static/images/menu/item.jpg</div>
+              </div>
+            </div>
+
+            <label class="chip" style="margin-top:10px;">
+              <input type="checkbox" name="isAvailable" {% if it.isAvailable %}checked{% endif %}>
+              <span>Available (show on customer menu)</span>
+            </label>
+
+            <div class="admin-actions">
+              <button class="btn primary" type="submit">Save</button>
+            </div>
+          </form>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endfor %}
+
+{% endblock %}

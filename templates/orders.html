@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="page-title">Your Orders</h2>
+<p class="muted">Orders + items are saved in SQL (SQLite). Menu is loaded from Firestore (NoSQL).</p>
+
+{% if user_points is not none %}
+  <div class="panel" style="margin-bottom:14px;">
+    <div class="strong">Rewards balance</div>
+    <div class="muted">You have {{ user_points }} points = £{{ "%.2f"|format(user_points/100) }}</div>
+  </div>
+{% endif %}
+
+{% if orders and orders|length > 0 %}
+  <div class="orders-list">
+    {% for o in orders %}
+      {% set items = order_items_map.get(o.id, []) %}
+      {% set s = (o.status or "Placed") %}
+
+      <div class="panel order-card">
+        <div class="order-top">
+          <div>
+            <div class="order-title">Order #{{ o.id }}</div>
+            <div class="muted small">
+              {% if o.created_at %}{{ o.created_at.strftime("%d %b %Y, %H:%M") }}{% endif %}
+            </div>
+
+            <div class="muted small" style="margin-top:6px;">
+              Payment: <span class="strong">{{ o.payment_method }}</span>
+              • <span class="strong">{{ o.payment_status }}</span>
+              {% if o.payment_ref %}• Ref: {{ o.payment_ref }}{% endif %}
+            </div>
+
+            {% if o.coupon_code %}
+              <div class="muted small">Coupon: <span class="strong">{{ o.coupon_code }}</span> (−£{{ "%.2f"|format(o.discount_pence/100) }})</div>
+            {% endif %}
+            {% if o.points_redeemed and o.points_redeemed > 0 %}
+              <div class="muted small">Points redeemed: −£{{ "%.2f"|format(o.points_redeemed/100) }} ({{ o.points_redeemed }} pts)</div>
+            {% endif %}
+            {% if o.points_earned and o.points_earned > 0 %}
+              <div class="muted small">Points earned: +£{{ "%.2f"|format(o.points_earned/100) }} ({{ o.points_earned }} pts)</div>
+            {% endif %}
+          </div>
+
+          <div class="order-meta">
+            <div class="status-wrap">
+              <span class="status status-{{ s|lower }}">{{ s }}</span>
+
+              <form method="POST" action="{{ url_for('update_order_status', order_id=o.id) }}" class="status-form">
+                <select name="status" class="select">
+                  <option value="Placed" {% if s == "Placed" %}selected{% endif %}>Placed</option>
+                  <option value="Preparing" {% if s == "Preparing" %}selected{% endif %}>Preparing</option>
+                  <option value="Ready" {% if s == "Ready" %}selected{% endif %}>Ready</option>
+                </select>
+                <button class="btn" type="submit">Update</button>
+              </form>
+            </div>
+
+            <div class="order-total">£{{ "%.2f"|format(o.total_pence/100) }}</div>
+          </div>
+        </div>
+
+        {% if items and items|length > 0 %}
+          <div class="order-items">
+            {% for it in items %}
+              <div class="order-item-row">
+                <div class="order-item-left">
+                  <div class="order-item-name">{{ it.name }}</div>
+                  <div class="muted small">
+                    £{{ "%.2f"|format(it.price_pence/100) }} × {{ it.qty }}
+                  </div>
+                </div>
+
+                <div class="right strong">
+                  £{{ "%.2f"|format((it.price_pence * it.qty)/100) }}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+
+          <div class="order-foot">
+            <div class="muted small">Final total (after discounts/points)</div>
+            <div class="right strong">£{{ "%.2f"|format(o.total_pence/100) }}</div>
+          </div>
+        {% else %}
+          <div class="muted small">No item breakdown found for this order.</div>
+        {% endif %}
+      </div>
+
+    {% endfor %}
+  </div>
+
+{% else %}
+  <div class="panel">
+    <p class="muted">No orders yet.</p>
+    <a class="btn primary" href="{{ url_for('menu') }}">Start an order</a>
+  </div>
+{% endif %}
+
+{% endblock %}

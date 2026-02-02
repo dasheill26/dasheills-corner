@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="menu-sticky">
+  <div class="menu-sticky-inner">
+    <div class="menu-header">
+      <div>
+        <h2 class="page-title" style="margin:0;">Menu</h2>
+        <div class="muted small">Pick your items, then checkout.</div>
+      </div>
+    </div>
+
+    <div class="menu-controls">
+      <div class="tabs" role="tablist" aria-label="Menu categories">
+        <button class="tab is-active" data-tab="Mains" type="button">Mains</button>
+        <button class="tab" data-tab="Sides" type="button">Sides</button>
+        <button class="tab" data-tab="Drinks" type="button">Drinks</button>
+      </div>
+
+      <div class="filters">
+        <input id="menuSearch" class="input menu-search" placeholder="Search wings, fries, coke..." />
+        <label class="chip">
+          <input id="onlyAvailable" type="checkbox" checked>
+          <span>Show available</span>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% for cat, items in categories.items() %}
+  {% if cat in ["Mains","Sides","Drinks"] %}
+    <section class="menu-section" data-section="{{ cat }}" id="{{ cat }}">
+      <h3 class="category">{{ cat }}</h3>
+
+      <div class="grid">
+        {% for it in items %}
+          {% set doc_id = (it.id|string) %}
+          {% set qty = cart_map.get(doc_id, 0) if cart_map else 0 %}
+
+          <div
+            class="card card--menu menu-item {% if qty and qty > 0 %}in-cart{% endif %}"
+            data-id="{{ doc_id }}"
+            data-name="{{ it.name }}"
+            data-price="{{ it.pricePence }}"
+            data-name-search="{{ (it.name or '')|lower }}"
+            data-desc-search="{{ (it.description or '')|lower }}"
+            data-available="{{ 'true' if it.get('isAvailable', True) else 'false' }}"
+          >
+            <div class="thumbwrap">
+              {% if it.image %}
+                <img class="thumb" src="{{ it.image }}" alt="{{ it.name }}">
+              {% else %}
+                <img class="thumb" src="{{ url_for('static', filename='images/placeholder.jpg') }}" alt="{{ it.name }}">
+              {% endif %}
+            </div>
+
+            <div class="card-body">
+              <div class="card-topline">
+                <div>
+                  <div class="card-title">{{ it.name }}</div>
+                  <div class="card-desc">{{ it.description }}</div>
+
+                  <div class="meta-row">
+                    <span class="badge badge-pop">Popular</span>
+                    {% if "spicy" in (it.name|lower) or "hot" in (it.name|lower) %}
+                      <span class="badge badge-spicy">🌶 Spicy</span>
+                    {% endif %}
+                    <span class="badge">{{ 420 + loop.index * 7 }} kcal</span>
+                  </div>
+                </div>
+
+                <div class="badges">
+                  {% if not it.get('isAvailable', True) %}
+                    <span class="badge" style="border-color: rgba(239,68,68,.5);">Sold out</span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="card-footer">
+                <div class="price">£{{ "%.2f"|format(it.pricePence/100) }}</div>
+
+                {% if it.get('isAvailable', True) %}
+                  <!-- ADD button (shown when qty == 0) -->
+                  <button
+                    class="btn small primary add-btn {% if qty and qty > 0 %}hide{% endif %}"
+                    type="button"
+                  >
+                    Add
+                  </button>
+
+                  <!-- Stepper (shown when qty > 0) -->
+                  <div class="stepper menu-stepper {% if not qty or qty <= 0 %}hide{% endif %}" role="group" aria-label="Quantity controls">
+                    <button class="btn step" type="button" data-action="dec" aria-label="Decrease">−</button>
+                    <div class="qty" data-qty>{{ qty or 0 }}</div>
+                    <button class="btn step" type="button" data-action="inc" aria-label="Increase">+</button>
+                  </div>
+                {% else %}
+                  <button class="btn small" type="button" disabled>Unavailable</button>
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+{% endfor %}
+
+<script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+{% endblock %}

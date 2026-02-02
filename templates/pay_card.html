@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="checkout-wrap">
+  <div class="checkout-head">
+    <h2 class="page-title">Card details (Demo)</h2>
+    <div class="muted">Step 2 of 2 — enter demo card details to place your order.</div>
+  </div>
+
+  <div class="panel" style="margin-bottom:14px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <span class="badge badge-pop">Step 2 of 2</span>
+        <span class="strong">Card details</span>
+      </div>
+      <div class="muted small">Demo only — no real charge</div>
+    </div>
+
+    <div class="notice" style="margin-top:12px;">
+      <div class="notice-dot"></div>
+      <div>
+        <div class="notice-title">Use demo test details</div>
+        <div class="muted small">
+          Example: <span class="strong">4242 4242 4242 4242</span> · Any future date · Any 3 digits.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="checkout-grid">
+
+    <!-- LEFT: Card Form -->
+    <div class="panel">
+      <h3 class="checkout-title">Enter card details</h3>
+
+      <form method="POST" action="{{ url_for('pay_confirm') }}" class="form" autocomplete="on">
+        <div>
+          <label class="label" for="card_name">Name on card</label>
+          <input class="input" id="card_name" name="card_name" placeholder="DASHEILL VAS" autocomplete="cc-name" required>
+        </div>
+
+        <div>
+          <label class="label" for="card_number">Card number</label>
+          <input
+            class="input"
+            id="card_number"
+            name="card_number"
+            placeholder="4242 4242 4242 4242"
+            inputmode="numeric"
+            autocomplete="cc-number"
+            required
+          >
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label class="label" for="exp">Expiry</label>
+            <input class="input" id="exp" name="exp" placeholder="MM/YY" autocomplete="cc-exp" required>
+          </div>
+          <div>
+            <label class="label" for="cvc">CVC</label>
+            <input class="input" id="cvc" name="cvc" placeholder="123" inputmode="numeric" autocomplete="cc-csc" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn primary checkout-btn">
+          Pay now (Demo)
+        </button>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+          <a class="btn" href="{{ url_for('checkout') }}">← Back</a>
+          <a class="btn" href="{{ url_for('cart') }}">Cart</a>
+        </div>
+
+        <div class="muted small" style="margin-top:10px;">
+          We do not store card details — they are only validated for demo flow.
+        </div>
+      </form>
+    </div>
+
+    <!-- RIGHT: Summary -->
+    <div class="panel">
+      <h3 class="checkout-title">Order summary</h3>
+
+      <div class="summary-list">
+        {% for it in cart %}
+          <div class="summary-row">
+            <div class="summary-left">
+              <div class="summary-name">{{ it.name }}</div>
+              <div class="muted small">£{{ "%.2f"|format(it.pricePence/100) }} × {{ it.qty }}</div>
+            </div>
+            <div class="summary-right strong">
+              £{{ "%.2f"|format((it.pricePence * it.qty)/100) }}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <hr class="sep">
+
+      <div class="totals">
+        <div class="totals-row">
+          <div class="muted">Total (demo)</div>
+          <div class="right strong">£{{ "%.2f"|format(subtotal_pence/100) }}</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

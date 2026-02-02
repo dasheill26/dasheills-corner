@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+
+
+{% block content %}
+<section class="auth-page">
+  <div class="auth-card">
+
+    <img class="auth-logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="{{ app_name }} logo">
+
+    <h1 class="auth-title">Log in</h1>
+
+    <p class="auth-sub">
+      New to {{ app_name }}?
+      <a class="auth-link" href="{{ url_for('register') }}">Create an account</a>
+    </p>
+
+    <form class="auth-form" method="POST" action="{{ url_for('login') }}">
+      <label class="auth-label" for="email">Email</label>
+      <input class="auth-input" id="email" name="email" type="email" autocomplete="email" required>
+
+      <label class="auth-label" for="password">Password</label>
+      <div class="auth-pass-wrap">
+        <input class="auth-input auth-input-pass" id="password" name="password" type="password" autocomplete="current-password" required>
+        <button class="auth-eye" type="button" aria-label="Show password" data-toggle="password">👁</button>
+      </div>
+
+      <button class="auth-primary" type="submit">LOG IN</button>
+
+      <div class="auth-row">
+        <label class="auth-check">
+          <input type="checkbox" name="remember" value="1">
+          <span>Remember Me</span>
+        </label>
+
+        <!-- If you have a real route, replace # with url_for('forgot_password') -->
+        <a class="auth-link" href="#">Forgot Password?</a>
+      </div>
+
+      <div class="auth-divider">
+        <span>Or log in with:</span>
+      </div>
+
+      <div class="auth-social">
+        <button type="button" class="auth-social-btn" aria-label="Facebook">f</button>
+        <button type="button" class="auth-social-btn" aria-label="Google">G</button>
+        <button type="button" class="auth-social-btn" aria-label="Apple"></button>
+      </div>
+    </form>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // simple show/hide password toggle
+  document.querySelectorAll('[data-toggle]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-toggle');
+      const input = document.getElementById(id);
+      if (!input) return;
+      input.type = input.type === 'password' ? 'text' : 'password';
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block body_class %}home{% endblock %}
+
+{% block content %}
+
+<!-- FULL-WIDTH HOME HERO -->
+<section class="home-hero">
+  <div class="home-bleed">
+    <div class="home-hero-frame">
+
+      <!-- LEFT -->
+      <div class="home-hero-left">
+        <div class="home-pill">🔥 Fresh • Fast • Flavour</div>
+
+        <h1 class="home-title">
+          Craving something <span class="home-title-accent">proper</span>?
+          <br>
+          <span class="home-brand">{{ app_name }}</span>
+        </h1>
+
+        <p class="home-sub">
+          Order your favourites — delivery, collection, or eat-in.
+        </p>
+
+        <div class="home-actions">
+          <a class="btn primary" href="{{ url_for('menu') }}">Order now</a>
+
+          {% if not current_user %}
+            <a class="btn" href="{{ url_for('register') }}">Create account</a>
+          {% else %}
+            <a class="btn" href="{{ url_for('orders') }}">View orders</a>
+          {% endif %}
+        </div>
+
+        <div class="home-dots" aria-label="Hero slides">
+          <button class="home-dot is-active" type="button" data-dot="0" aria-label="Slide 1"></button>
+          <button class="home-dot" type="button" data-dot="1" aria-label="Slide 2"></button>
+          <button class="home-dot" type="button" data-dot="2" aria-label="Slide 3"></button>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="home-hero-right" aria-label="Promotions">
+        <div class="home-slider">
+          <img class="home-slide is-active" src="{{ url_for('static', filename='images/hero/hero1.png') }}" alt="Promo 1" />
+          <img class="home-slide" src="{{ url_for('static', filename='images/hero/hero2.png') }}" alt="Promo 2" />
+          <img class="home-slide" src="{{ url_for('static', filename='images/hero/hero3.png') }}" alt="Promo 3" />
+
+          <a class="home-img-cta" href="{{ url_for('menu') }}">Order now</a>
+
+          <button class="home-arrow prev" type="button" aria-label="Previous slide">‹</button>
+          <button class="home-arrow next" type="button" aria-label="Next slide">›</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ✅ REWARDS: FULL IMAGE BANNER (exactly like your screenshot) -->
+<!-- REWARDS IMAGE SECTION -->
+<!-- REWARDS IMAGE SECTION -->
+<section class="rewards-image-section">
+  <div class="rewards-banner">
+    <img src="{{ url_for('static', filename='images/reward-page.png') }}" alt="Dasheill's Rewards">
+
+    <!-- Clickable areas on top of the image buttons -->
+    <a class="rewards-hotspot rewards-join" href="{{ url_for('register') }}" aria-label="Join Now"></a>
+    <a class="rewards-hotspot rewards-login" href="{{ url_for('login') }}" aria-label="Login"></a>
+  </div>
+</section>
+
+
+
+<!-- Popular categories -->
+<section class="section">
+  <div class="section-head">
+    <h2 class="section-title">Popular categories</h2>
+    <p class="muted">Tap a category to start building your order.</p>
+  </div>
+
+  <div class="cat-grid">
+    <a class="cat-card" href="{{ url_for('menu') }}#Mains">
+      <div class="cat-imgwrap">
+        <img class="cat-imgtag" src="{{ url_for('static', filename='images/mains.jpg') }}" alt="Mains">
+      </div>
+      <div class="cat-body">
+        <div class="cat-title">Mains</div>
+        <div class="muted">Wings, burgers, tenders</div>
+      </div>
+    </a>
+
+    <a class="cat-card" href="{{ url_for('menu') }}#Sides">
+      <div class="cat-imgwrap">
+        <img class="cat-imgtag" src="{{ url_for('static', filename='images/sides.jpg') }}" alt="Sides">
+      </div>
+      <div class="cat-body">
+        <div class="cat-title">Sides</div>
+        <div class="muted">Fries, dips, extras</div>
+      </div>
+    </a>
+
+    <a class="cat-card" href="{{ url_for('menu') }}#Drinks">
+      <div class="cat-imgwrap">
+        <img class="cat-imgtag" src="{{ url_for('static', filename='images/drinks.jpg') }}" alt="Drinks">
+      </div>
+      <div class="cat-body">
+        <div class="cat-title">Drinks</div>
+        <div class="muted">Cold cans & bottles</div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<section class="section">
+  <div class="feature-strip">
+    <div class="feature">
+      <div class="feature-title">Made fresh</div>
+      <div class="muted">Cooked to order, every time.</div>
+    </div>
+    <div class="feature">
+      <div class="feature-title">Fast checkout</div>
+      <div class="muted">Add to cart → checkout in seconds.</div>
+    </div>
+    <div class="feature">
+      <div class="feature-title">Secure login</div>
+      <div class="muted">Accounts stored safely in SQL.</div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+  const slides = Array.from(document.querySelectorAll('.home-slide'));
+  const dots = Array.from(document.querySelectorAll('.home-dot'));
+  const btnPrev = document.querySelector('.home-arrow.prev');
+  const btnNext = document.querySelector('.home-arrow.next');
+
+  if (!slides.length) return;
+
+  let index = 0;
+  let timer = null;
+
+  const setActive = (i) => {
+    index = (i + slides.length) % slides.length;
+    slides.forEach((s, k) => s.classList.toggle('is-active', k === index));
+    dots.forEach((d, k) => d.classList.toggle('is-active', k === index));
+  };
+
+  const next = () => setActive(index + 1);
+  const prev = () => setActive(index - 1);
+
+  const start = () => {
+    stop();
+    timer = setInterval(next, 3000);
+  };
+
+  const stop = () => {
+    if (timer) clearInterval(timer);
+    timer = null;
+  };
+
+  btnNext && btnNext.addEventListener('click', () => { next(); start(); });
+  btnPrev && btnPrev.addEventListener('click', () => { prev(); start(); });
+
+  dots.forEach((d) => {
+    d.addEventListener('click', () => {
+      const i = Number(d.dataset.dot || 0);
+      setActive(i);
+      start();
+    });
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stop();
+    else start();
+  });
+
+  start();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="page-title">{{ _("Checkout") }}</h2>
+
+{% if cart and cart|length > 0 %}
+  <div class="checkout-grid">
+
+    <div class="panel">
+      <h3 class="checkout-title">{{ _("Order type") }}</h3>
+      <p class="muted">
+        {{ _("Choose how you want your order. Delivery needs an address. Collection / Booking can include a time.") }}
+      </p>
+
+      <!-- IMPORTANT: posts to pay_stripe (demo starter) -->
+      <form method="POST" action="{{ url_for('pay_stripe') }}" class="form" id="checkoutForm">
+
+        <!-- Order type selector -->
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+          <label class="chip">
+            <input type="radio" name="order_type" value="delivery" checked>
+            <span>{{ _("Delivery") }}</span>
+          </label>
+
+          <label class="chip">
+            <input type="radio" name="order_type" value="collection">
+            <span>{{ _("Collection") }}</span>
+          </label>
+
+          <label class="chip">
+            <input type="radio" name="order_type" value="eatin">
+            <span>{{ _("Eat-in") }}</span>
+          </label>
+
+          <label class="chip">
+            <input type="radio" name="order_type" value="booking">
+            <span>{{ _("Booking") }}</span>
+          </label>
+        </div>
+
+        <label class="label" for="customer_name">{{ _("Full name") }}</label>
+        <input class="input" id="customer_name" name="customer_name" placeholder="{{ _('e.g. Dasheill Vas') }}" required>
+
+        <!-- Delivery address (only for delivery) -->
+        <div id="deliveryBlock">
+          <label class="label" for="delivery_address">{{ _("Delivery address") }}</label>
+          <textarea class="input textarea" id="delivery_address" name="delivery_address" rows="4"
+                    placeholder="{{ _('House number, street, city, postcode') }}"></textarea>
+        </div>
+
+        <!-- Collection time (for collection) -->
+        <div id="collectionBlock" class="hide">
+          <label class="label" for="collection_time">{{ _("Collection time") }}</label>
+          <input class="input" id="collection_time" name="collection_time" placeholder="{{ _('e.g. ASAP or 18:30') }}">
+          <div class="muted small" style="margin-top:8px;">
+            {{ _("Tip: you can enter ASAP or a time like 18:30.") }}
+          </div>
+        </div>
+
+        <!-- Eat-in info (for eatin) -->
+        <div id="eatinBlock" class="hide">
+          <label class="label" for="table_number">{{ _("Table number (optional)") }}</label>
+          <input class="input" id="table_number" name="table_number" placeholder="{{ _('e.g. 12') }}">
+        </div>
+
+        <!-- Booking time (for booking) -->
+        <div id="bookingBlock" class="hide">
+          <label class="label" for="booking_time">{{ _("Booking time") }}</label>
+          <input class="input" id="booking_time" name="booking_time" placeholder="{{ _('e.g. Today 19:00') }}">
+          <div class="muted small" style="margin-top:8px;">
+            {{ _("Add a date/time so we can reserve it.") }}
+          </div>
+        </div>
+
+        <h3 class="checkout-title" style="margin-top:12px;">{{ _("Discounts & Rewards (demo)") }}</h3>
+
+        <label class="label" for="coupon_code">{{ _("Coupon code") }}</label>
+        <input class="input" id="coupon_code" name="coupon_code" placeholder="{{ _('e.g. DASHEILL10') }}">
+
+        <label class="chip" style="margin-top:10px;">
+          <input type="checkbox" name="redeem_points">
+          <span>{{ _("Redeem my points (You have %(pts)s points = £%(gbp)s)", pts=user_points, gbp="%.2f"|format(user_points/100)) }}</span>
+        </label>
+
+        <button type="submit" class="btn primary checkout-btn">
+          {{ _("Continue to Card Details (Demo)") }}
+        </button>
+
+        <a class="btn" href="{{ url_for('cart') }}">{{ _("Back to cart") }}</a>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h3 class="checkout-title">{{ _("Order summary") }}</h3>
+
+      <div class="summary-list">
+        {% for it in cart %}
+          <div class="summary-row">
+            <div class="summary-left">
+              <div class="summary-name">{{ it.name }}</div>
+              <div class="muted small">
+                £{{ "%.2f"|format(it.pricePence/100) }} × {{ it.qty }}
+              </div>
+            </div>
+            <div class="summary-right strong">
+              £{{ "%.2f"|format((it.pricePence * it.qty)/100) }}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <hr class="sep">
+
+      <div class="totals">
+        <div class="totals-row">
+          <div class="muted">{{ _("Subtotal") }}</div>
+          <div class="right">£{{ "%.2f"|format(subtotal_pence/100) }}</div>
+        </div>
+        <div class="muted small" style="margin-top:8px;">
+          {{ _("Demo payment only. You’ll enter card details next.") }}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    (function(){
+      const deliveryBlock = document.getElementById("deliveryBlock");
+      const collectionBlock = document.getElementById("collectionBlock");
+      const eatinBlock = document.getElementById("eatinBlock");
+      const bookingBlock = document.getElementById("bookingBlock");
+
+      const addressEl = document.getElementById("delivery_address");
+      const bookingTimeEl = document.getElementById("booking_time");
+
+      function setVisible(el, on){
+        if (!el) return;
+        if (on) el.classList.remove("hide");
+        else el.classList.add("hide");
+      }
+
+      function onTypeChange(){
+        const picked = document.querySelector('input[name="order_type"]:checked')?.value || "delivery";
+
+        setVisible(deliveryBlock, picked === "delivery");
+        setVisible(collectionBlock, picked === "collection");
+        setVisible(eatinBlock, picked === "eatin");
+        setVisible(bookingBlock, picked === "booking");
+
+        // Requirements:
+        if (addressEl) addressEl.required = (picked === "delivery");
+        if (bookingTimeEl) bookingTimeEl.required = (picked === "booking");
+      }
+
+      document.querySelectorAll('input[name="order_type"]').forEach(r => {
+        r.addEventListener("change", onTypeChange);
+      });
+
+      onTypeChange();
+    })();
+  </script>
+
+{% else %}
+  <div class="panel">
+    <p class="muted">{{ _("Your cart is empty.") }}</p>
+    <a class="btn primary" href="{{ url_for('menu') }}">{{ _("Go to menu") }}</a>
+  </div>
+{% endif %}
+
+{% endblock %}

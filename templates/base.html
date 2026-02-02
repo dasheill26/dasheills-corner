@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ app_name }}</title>
+
+  <!-- Cache-bust so changes actually apply -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css', v='homebg-v1') }}">
+
+  <!-- Home-only background override (pattern + dark overlay) -->
+  <style>
+    /* Only applies on the home page because body_class = home */
+    body.home{
+      position: relative;
+      background: #07090c; /* fallback */
+      overflow-x: hidden;
+    }
+
+    /* Pattern layer */
+    body.home::before{
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background-image: url("{{ url_for('static', filename='images/hero/hero-pattern.png') }}");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      /* If you want it to look less “loud”, lower opacity */
+      opacity: 0.95;
+    }
+
+    /* Dark overlay layer (keeps your UI readable) */
+    body.home::after{
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background: radial-gradient(circle at 25% 15%, rgba(0,0,0,.55), rgba(0,0,0,.80));
+    }
+  </style>
+
+  {% block head_extra %}{% endblock %}
+</head>
+
+<body class="{% block body_class %}{% endblock %}">
+  <header class="topbar">
+    <div class="topbar-inner">
+
+      <!-- Brand / Logo -->
+      <a class="brand" href="{{ url_for('index') }}" aria-label="Home">
+        <img class="brand-logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="{{ app_name }} logo">
+        <span class="brand-name">{{ app_name }}</span>
+      </a>
+
+      <nav class="navlinks">
+        <a href="{{ url_for('menu') }}">{{ t("Menu") }}</a>
+
+        <a class="nav-cart" href="{{ url_for('cart') }}">
+          {{ t("Cart") }}
+          <span id="cartBadge" class="cart-badge {% if cart_count and cart_count>0 %}show{% endif %}">
+            {{ cart_count or 0 }}
+          </span>
+        </a>
+
+        {% if current_user %}
+          <a href="{{ url_for('orders') }}">{{ t("Orders") }}</a>
+
+          {% if is_admin %}
+            <a href="{{ url_for('admin_menu') }}">{{ t("Admin") }}</a>
+          {% endif %}
+
+          <a class="pill" href="{{ url_for('logout') }}">{{ t("Logout") }}</a>
+        {% else %}
+          <a class="pill" href="{{ url_for('login') }}">{{ t("Login") }}</a>
+        {% endif %}
+
+        <!-- Language selector -->
+        <form class="lang-form" method="GET" action="{{ url_for('set_language', code=lang) }}">
+          <label class="muted small" style="margin:0;">{{ t("Language") }}</label>
+          <select class="input lang-select" onchange="window.location.href=this.value">
+            {% for code, label in languages.items() %}
+              <option value="{{ url_for('set_language', code=code, next=request.full_path) }}"
+                      {% if lang == code %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
+        </form>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-wrap">
+          {% for category, msg in messages %}
+            <div class="flash {{ category }}">{{ msg }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <div id="uiToast" class="toast" aria-live="polite" aria-atomic="true"></div>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

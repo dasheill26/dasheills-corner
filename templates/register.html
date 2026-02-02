@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+
+    <div class="auth-logo">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="{{ app_name }} logo">
+    </div>
+
+    <h1 class="auth-title">Create an account</h1>
+
+    <div class="auth-sub">
+      Already have one?
+      <a class="auth-link" href="{{ url_for('login') }}">Log in</a>
+    </div>
+
+    <form class="auth-form" method="POST" action="{{ url_for('register') }}">
+      <label class="auth-label" for="email">Email</label>
+      <input class="auth-input" type="email" id="email" name="email" required>
+
+      <label class="auth-label" for="password">Password</label>
+
+      <div class="auth-password">
+        <input class="auth-input" type="password" id="password" name="password" required>
+        <button class="auth-eye" type="button" data-toggle="password" aria-label="Show password">👁</button>
+      </div>
+
+      <!-- ✅ Password strength -->
+      <div class="pw-strength" aria-live="polite">
+        <div class="pw-meter" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0">
+          <div class="pw-bar" id="pwBar"></div>
+        </div>
+        <div class="pw-row">
+          <div class="pw-label" id="pwLabel">Strength: —</div>
+          <div class="pw-hint" id="pwHint">Use 8+ chars, upper/lower, number, symbol.</div>
+        </div>
+      </div>
+
+      <div class="auth-help">
+        <div class="auth-help-title">Password needs to have:</div>
+        <ul class="auth-bullets">
+          <li>At least 8 characters</li>
+          <li>A lowercase letter</li>
+          <li>An uppercase letter</li>
+          <li>A number</li>
+        </ul>
+      </div>
+
+      <label class="auth-label" for="first_name">First name</label>
+      <input class="auth-input" type="text" id="first_name" name="first_name" required>
+
+      <label class="auth-label" for="last_name">Last name</label>
+      <input class="auth-input" type="text" id="last_name" name="last_name" required>
+
+      <label class="auth-check">
+        <input type="checkbox" name="offers" value="1">
+        <span>Send me offers & updates</span>
+      </label>
+
+      <button class="auth-submit" type="submit">CREATE YOUR ACCOUNT</button>
+
+      <div class="auth-divider"><span>Or register with:</span></div>
+
+      <div class="auth-social">
+        <button type="button" class="auth-social-btn" aria-label="Facebook">f</button>
+        <button type="button" class="auth-social-btn" aria-label="Google">G</button>
+        <button type="button" class="auth-social-btn" aria-label="Apple"></button>
+      </div>
+
+      <p class="auth-foot">
+        By signing up I confirm I am aged 16 years or over.
+        For more information consult our <a class="auth-link" href="#">Privacy Policy</a> and
+        <a class="auth-link" href="#">Terms and Conditions</a>.
+      </p>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/password.js') }}"></script>
+{% endblock %}

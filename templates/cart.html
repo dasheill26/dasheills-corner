@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+<div class="cart-wrap">
+  <div class="cart-headline">
+    <h2 class="page-title">Your Cart</h2>
+    <div class="muted">Review items, adjust quantities, then checkout.</div>
+  </div>
+
+  {% if cart and cart|length > 0 %}
+    <div class="cart-grid">
+
+      <!-- LEFT: Items -->
+      <div class="panel cart-panel">
+        <div class="cart-panel-top">
+          <div class="cart-panel-title">Items</div>
+          <div class="muted small">{{ cart|length }} item type{% if cart|length != 1 %}s{% endif %}</div>
+        </div>
+
+        <div class="cart-list">
+          {% for it in cart %}
+            <div class="cart-item" data-id="{{ it.itemId }}" data-price="{{ it.pricePence }}">
+              <div class="cart-thumb" aria-hidden="true">
+                <div class="cart-thumb-inner">{{ (it.name[:1] or "D")|upper }}</div>
+              </div>
+
+              <div class="cart-main">
+                <div class="cart-name">{{ it.name }}</div>
+                <div class="cart-meta muted small">
+                  £{{ "%.2f"|format(it.pricePence/100) }} each
+                </div>
+
+                <div class="cart-controls">
+                  <div class="stepper" role="group" aria-label="Quantity controls">
+                    <button class="btn step" type="button" data-action="dec" aria-label="Decrease">−</button>
+                    <div class="qty" data-qty>{{ it.qty }}</div>
+                    <button class="btn step" type="button" data-action="inc" aria-label="Increase">+</button>
+                  </div>
+
+                  <div class="cart-line-total strong" data-line-total>
+                    £{{ "%.2f"|format((it.pricePence * it.qty)/100) }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="cart-note muted small">
+          Tip: Use + / − to update quantities. Totals update instantly.
+        </div>
+      </div>
+
+      <!-- RIGHT: Summary -->
+      <div class="panel cart-summary-panel">
+        <div class="summary-title">Summary</div>
+
+        <div class="summary-row">
+          <div class="muted">Subtotal</div>
+          <div class="strong" id="cartSubtotal">£{{ "%.2f"|format(subtotal_pence/100) }}</div>
+        </div>
+
+        <div class="summary-row muted small">
+          <div>Delivery</div>
+          <div>Calculated at checkout</div>
+        </div>
+
+        <hr class="sep">
+
+        <div class="summary-row grand">
+          <div class="strong">Total</div>
+          <div class="strong" id="cartTotal">£{{ "%.2f"|format(subtotal_pence/100) }}</div>
+        </div>
+
+        <div class="cart-actions">
+          <a class="btn" href="{{ url_for('menu') }}">Continue shopping</a>
+          <a class="btn primary" href="{{ url_for('checkout') }}">Checkout</a>
+        </div>
+
+        <div class="cart-toast" id="cartToast" aria-live="polite" aria-atomic="true"></div>
+      </div>
+
+    </div>
+  {% else %}
+    <div class="panel">
+      <p class="muted">Your cart is empty.</p>
+      <a class="btn primary" href="{{ url_for('menu') }}">Go to menu</a>
+    </div>
+  {% endif %}
+</div>
+
+<script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+{% endblock %}

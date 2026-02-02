@@ -1,0 +1,215 @@
+/* =========================
+   Dasheill's Corner — Homepage Hero (SAFE)
+   Only affects body.home + .dc-hero*
+   ========================= */
+
+body.home main.container{
+  max-width: 1320px;
+  padding-left: 22px;
+  padding-right: 22px;
+}
+
+/* Full-bleed section */
+body.home .dc-hero{
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding: 18px 0 14px;
+}
+
+body.home .dc-hero-shell{
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 22px;
+}
+
+/* Frame */
+body.home .dc-hero-frame{
+  border-radius: 26px;
+  border: 1px solid rgba(255,255,255,.12);
+  overflow: hidden;
+  background: rgba(255,255,255,.03);
+  box-shadow: 0 28px 120px rgba(0,0,0,.55);
+  min-height: 520px;
+  display: grid;
+  grid-template-columns: 1fr 1.25fr; /* left text, right image */
+  position: relative;
+}
+
+@media (max-width: 960px){
+  body.home .dc-hero-frame{
+    grid-template-columns: 1fr;
+    min-height: 640px;
+  }
+}
+
+/* Left */
+body.home .dc-hero-left{
+  padding: 34px 34px 26px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  position: relative;
+  z-index: 2;
+  background:
+    radial-gradient(900px 520px at 20% 35%, rgba(0,0,0,.78), transparent 60%),
+    linear-gradient(90deg, rgba(0,0,0,.75), rgba(0,0,0,.35));
+}
+
+@media (max-width: 640px){
+  body.home .dc-hero-left{ padding: 22px 18px 18px; }
+}
+
+body.home .dc-hero-pill{
+  display: inline-flex;
+  width: fit-content;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.35);
+  backdrop-filter: blur(10px);
+  font-weight: 900;
+  font-size: 12px;
+}
+
+body.home .dc-hero-title{
+  margin: 10px 0 6px;
+  font-weight: 950;
+  letter-spacing: -0.8px;
+  line-height: 1.03;
+  font-size: 52px;
+}
+
+@media (max-width: 960px){ body.home .dc-hero-title{ font-size: 44px; } }
+@media (max-width: 640px){ body.home .dc-hero-title{ font-size: 34px; } }
+
+body.home .dc-hero-accent{
+  color: rgba(255,138,0,.98);
+}
+body.home .dc-hero-brand{
+  color: rgba(255,59,48,.98);
+}
+
+body.home .dc-hero-sub{
+  margin: 0 0 8px;
+  color: rgba(246,248,255,.78);
+  max-width: 560px;
+  font-weight: 650;
+}
+
+body.home .dc-hero-actions{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+/* Dots under left panel */
+body.home .dc-hero-dots{
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  align-items: center;
+}
+body.home .dc-dot{
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.30);
+  background: rgba(255,255,255,.12);
+  cursor: pointer;
+  padding: 0;
+}
+body.home .dc-dot.is-active{
+  background: rgba(255,59,48,.95);
+  border-color: rgba(255,59,48,.70);
+  transform: scale(1.05);
+}
+
+/* Right image area */
+body.home .dc-hero-right{
+  position: relative;
+  overflow: hidden;
+  background: rgba(0,0,0,.35);
+}
+
+/* Blurred fill background (kills black bars nicely) */
+body.home .dc-hero-bg{
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;          /* fill */
+  filter: blur(18px) saturate(1.1);
+  transform: scale(1.15);
+  opacity: .85;
+}
+
+/* Foreground portrait image shown FULL (uncropped) */
+body.home .dc-hero-img{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;             /* show whole image */
+  object-position: center;
+  filter: drop-shadow(0 24px 80px rgba(0,0,0,.35));
+}
+
+/* Soft readability vignette */
+body.home .dc-hero-right::after{
+  content:"";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(900px 520px at 15% 35%, rgba(0,0,0,.35), transparent 60%),
+    linear-gradient(90deg, rgba(0,0,0,.35), rgba(0,0,0,.05) 55%, rgba(0,0,0,.25));
+  pointer-events: none;
+}
+
+/* Order button ON the image */
+body.home .dc-hero-order{
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 3;
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-weight: 950;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.92);
+  color: #0b0e12;
+  text-decoration: none;
+  box-shadow: 0 18px 55px rgba(0,0,0,.45);
+}
+body.home .dc-hero-order:hover{
+  filter: brightness(0.98);
+}
+
+/* Arrows */
+body.home .dc-hero-arrow{
+  position: absolute;
+  z-index: 3;
+  bottom: 18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.35);
+  color: rgba(255,255,255,.92);
+  font-size: 26px;
+  font-weight: 900;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: transform .14s ease, background .14s ease;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+body.home .dc-hero-arrow:hover{
+  transform: translateY(-1px);
+  background: rgba(0,0,0,.45);
+}
+body.home .dc-hero-prev{ right: 72px; }
+body.home .dc-hero-next{ right: 18px; }
