@@ -194,6 +194,10 @@ def create_app():
 
     return app
 
+    # ---------------- Security ----------------
+    # All sensitive routes (checkout, orders, payment)
+    # are protected using session-based authentication
+    # via the @login_required decorator.
 
 app = create_app()
 
