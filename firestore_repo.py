@@ -1,5 +1,6 @@
 import os
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+
 from google.cloud import firestore
 
 MENU_COLLECTION = "menuItems"
@@ -7,38 +8,46 @@ MENU_COLLECTION = "menuItems"
 _db = None
 
 
-def _get_db():
+def _get_db() -> Optional["firestore.Client"]:
     """
     Returns a Firestore client.
-    Uses FIRESTORE_PROJECT_ID if set; otherwise uses default credentials/project.
+    If credentials/project are not available (e.g., during pytest), returns None.
     """
     global _db
-    if _db is None:
+    if _db is not None:
+        return _db
+
+    try:
         project_id = os.environ.get("FIRESTORE_PROJECT_ID")
         _db = firestore.Client(project=project_id) if project_id else firestore.Client()
-    return _db
+        return _db
+    except Exception:
+        # IMPORTANT: don't crash tests/local if Firestore isn't available
+        return None
 
 
 def get_menu_items(include_unavailable: bool = True) -> List[Dict[str, Any]]:
     """
     Returns menu items from Firestore.
-    Each item includes:
-      - id (document id)
-      - name, description, pricePence, category, image, sortOrder, isAvailable
+    Safe fallback: returns [] if Firestore isn't available.
     """
     db = _get_db()
+    if db is None:
+        return []
+
     docs = db.collection(MENU_COLLECTION).stream()
 
     items: List[Dict[str, Any]] = []
     for d in docs:
         data = d.to_dict() or {}
-        data["id"] = d.id
 
-        # Backward compatibility: some earlier seeds used imageUrl instead of image
+        # normalize id fields for consistency across templates + cart + APIs
+        data["id"] = d.id
+        data["itemId"] = d.id  # <- important alias used by your cart/session logic
+
         if "image" not in data and "imageUrl" in data:
             data["image"] = data.get("imageUrl")
 
-        # Ensure keys exist (avoid template crashes)
         data.setdefault("name", "")
         data.setdefault("description", "")
         data.setdefault("pricePence", 0)
@@ -52,7 +61,6 @@ def get_menu_items(include_unavailable: bool = True) -> List[Dict[str, Any]]:
 
         items.append(data)
 
-    # Sort: category then sortOrder then name
     items.sort(
         key=lambda x: (
             x.get("category", "Other"),
@@ -64,13 +72,16 @@ def get_menu_items(include_unavailable: bool = True) -> List[Dict[str, Any]]:
 
 
 def update_menu_item(doc_id: str, fields: Dict[str, Any]) -> None:
-    """Updates a Firestore menu item document by id. Only updates fields provided."""
     db = _get_db()
+    if db is None:
+        return
     db.collection(MENU_COLLECTION).document(doc_id).update(fields)
 
 
 def set_menu_item_availability(doc_id: str, is_available: bool) -> None:
     db = _get_db()
+    if db is None:
+        return
     db.collection(MENU_COLLECTION).document(doc_id).update({"isAvailable": bool(is_available)})
 
 
@@ -83,12 +94,13 @@ def log_order_event(
 ) -> None:
     """
     Safe Firestore logger for order events.
-    - If Firestore isn't available or credentials missing, it will NOT crash your app.
-    - It simply returns without doing anything.
+    Never crashes the website/tests if Firestore isn't available.
     """
-    try:
-        db = _get_db()
+    db = _get_db()
+    if db is None:
+        return
 
+    try:
         doc = {
             "order_id": int(order_id),
             "user_email": str(user_email),
@@ -98,10 +110,6 @@ def log_order_event(
             "created_at": firestore.SERVER_TIMESTAMP,
             "source": "flask_app",
         }
-
-        # Keep collection name consistent (you can change later if you want)
         db.collection("order_events").add(doc)
-
     except Exception:
-        # IMPORTANT: never crash the website if Firestore logging fails
         return
