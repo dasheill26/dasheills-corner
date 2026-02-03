@@ -8,12 +8,14 @@ from firestore_repo import get_menu_items
 
 APP_NAME = "DASHEILLS CORNER"
 
+# ---------------- Simple i18n (no extra packages) ----------------
 SUPPORTED_LANGS = {
     "en": "English",
     "es": "Español",
     "fr": "Français",
 }
 
+# Translation dictionary (start small; expand anytime)
 TRANSLATIONS = {
     "en": {
         "Language": "Language",
@@ -97,10 +99,8 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # Ensure instance folder exists
     os.makedirs(os.path.join(app.root_path, "instance"), exist_ok=True)
 
-    # DB init
     db.init_app(app)
     with app.app_context():
         db.create_all()
@@ -144,6 +144,7 @@ def create_app():
     def t(key: str, **kwargs) -> str:
         lang = get_lang()
         text = TRANSLATIONS.get(lang, {}).get(key, TRANSLATIONS["en"].get(key, key))
+        # allow %(name)s formatting used in your templates
         if kwargs:
             try:
                 return text % kwargs
@@ -151,7 +152,6 @@ def create_app():
                 return text
         return text
 
-    # ✅ THIS fixes: jinja2.exceptions.UndefinedError: 't' is undefined
     @app.context_processor
     def inject_globals():
         u = current_user()
@@ -163,13 +163,8 @@ def create_app():
             "lang": get_lang(),
             "languages": SUPPORTED_LANGS,
             "t": t,
-            "_": t,  # allow {{ _("Menu") }}
+            "_": t,  # IMPORTANT: allows {{ _("...") }} in templates
         }
-
-    # ---------------- Health check ----------------
-    @app.get("/healthz")
-    def healthz():
-        return jsonify({"status": "ok"}), 200
 
     # ---------------- Language switch ----------------
     @app.get("/lang/<code>")
@@ -225,25 +220,6 @@ def create_app():
             coupons=[]
         )
 
-    # ---------------- REST API ----------------
-    @app.get("/api/menu")
-    def api_menu():
-        items = get_menu_items(include_unavailable=True)
-        normalized = []
-        for it in items:
-            normalized.append({
-                "id": it.get("id") or it.get("itemId"),
-                "itemId": it.get("itemId") or it.get("id"),
-                "name": it.get("name", ""),
-                "description": it.get("description", ""),
-                "pricePence": int(it.get("pricePence", 0) or 0),
-                "category": it.get("category", "Other"),
-                "image": it.get("image", ""),
-                "sortOrder": int(it.get("sortOrder", 9999) or 9999),
-                "isAvailable": bool(it.get("isAvailable", True)),
-            })
-        return jsonify(normalized), 200
-
     # ---------------- Demo Payment (2-step) ----------------
     @app.post("/pay/stripe")
     @login_required
@@ -252,6 +228,7 @@ def create_app():
             flash("Your cart is empty.", "error")
             return redirect(url_for("menu"))
 
+        # NEW: order type
         order_type = request.form.get("order_type", "delivery").strip().lower()
         collection_time = request.form.get("collection_time", "ASAP").strip()
         booking_time = request.form.get("booking_time", "").strip()
@@ -272,6 +249,7 @@ def create_app():
             flash("Booking time is required.", "error")
             return redirect(url_for("checkout"))
 
+        # keep existing demo coupon/points fields (safe even if not used yet)
         coupon_code = request.form.get("coupon_code", "").strip().upper()
         redeem_points = (request.form.get("redeem_points") == "on")
 
@@ -331,8 +309,24 @@ def create_app():
 
         u = current_user()
         total = cart_subtotal_pence()
+        pending = session.get("pending_payment") or {}
 
         order = Order(user_id=u.id, total_pence=total)
+
+        # SAFE optional fields (won't break if columns don't exist)
+        if hasattr(order, "order_type"):
+            order.order_type = pending.get("order_type")
+        if hasattr(order, "delivery_address"):
+            order.delivery_address = pending.get("delivery_address")
+        if hasattr(order, "customer_name"):
+            order.customer_name = pending.get("customer_name")
+        if hasattr(order, "collection_time"):
+            order.collection_time = pending.get("collection_time")
+        if hasattr(order, "booking_time"):
+            order.booking_time = pending.get("booking_time")
+        if hasattr(order, "table_number"):
+            order.table_number = pending.get("table_number")
+
         db.session.add(order)
         db.session.commit()
 
@@ -361,15 +355,15 @@ def create_app():
     @login_required
     def orders():
         u = current_user()
-        orders_q = (
+        orders = (
             Order.query
             .filter_by(user_id=u.id)
             .order_by(Order.created_at.desc())
             .all()
         )
-        order_items_map = {o.id: OrderItem.query.filter_by(order_id=o.id).all() for o in orders_q}
+        order_items_map = {o.id: OrderItem.query.filter_by(order_id=o.id).all() for o in orders}
         user_points = int(getattr(u, "reward_points", 0) or 0)
-        return render_template("orders.html", orders=orders_q, order_items_map=order_items_map, user_points=user_points)
+        return render_template("orders.html", orders=orders, order_items_map=order_items_map, user_points=user_points)
 
     @app.post("/orders/<int:order_id>/status")
     @login_required
@@ -381,13 +375,16 @@ def create_app():
             return redirect(url_for("orders"))
 
         new_status = request.form.get("status", "Placed").strip()
-        allowed = {"Placed", "Preparing", "Ready"}
-        if new_status not in allowed:
-            flash("Invalid status.", "error")
-            return redirect(url_for("orders"))
-        o.status = new_status
-        db.session.commit()
-        flash(f"Order #{o.id} updated to {new_status}.", "ok")
+        if hasattr(o, "status"):
+            allowed = {"Placed", "Preparing", "Ready"}
+            if new_status not in allowed:
+                flash("Invalid status.", "error")
+                return redirect(url_for("orders"))
+            o.status = new_status
+            db.session.commit()
+            flash(f"Order #{o.id} updated to {new_status}.", "ok")
+        else:
+            flash("Status updates not enabled in your Order model yet.", "error")
 
         return redirect(url_for("orders"))
 
@@ -497,16 +494,6 @@ def create_app():
             "cartCount": sum(int(x.get("qty", 0)) for x in new_cart),
             "subtotalPence": subtotal
         })
-
-    # ---------------- Error handlers ----------------
-    @app.errorhandler(404)
-    def not_found(e):
-        return render_template("404.html"), 404
-
-    @app.errorhandler(500)
-    def server_error(e):
-        return render_template("500.html"), 500
-
 
     return app
 
